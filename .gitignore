@@ -1,0 +1,15 @@
+# Build output
+/build*/
+*.7z
+*.zip
+
+# In-source CMake / Visual Studio output
+/ALL_BUILD.dir/
+/CMakeFiles/
+/Key_Jacker.dir/
+/ZERO_CHECK.dir/
+/Release/
+/x64/
+CMakeCache.txt
+cmake_install.cmake
+compile_commands.json
