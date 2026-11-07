@@ -346,15 +346,21 @@ void Poll_Devices()
     PollKeyboard();
     PollMouse();
     PollWheel();
-    PollXboxController();
+    if (KJ_Xbox_Enabled)
+        PollXboxController();
 
-    if (xInputConnected) {
+    if (xInputConnected && KJ_Xbox_Enabled) {
         if (joystickConnected) {
             ClearJoystickStates();
             joystickConnected = false;
         }
     } else {
-        PollJoystick();
+        if (KJ_Joystick_Enabled)
+            PollJoystick();
+        else {
+            ClearJoystickStates();
+            joystickConnected = false;
+            }
     }
 }
 

@@ -12,3 +12,7 @@ inline std::atomic<HWND> targetGameHwnd{nullptr};
 
 // Foreground window cached by the hook thread, avoiding a Win32 call per event.
 inline std::atomic<HWND> kj_cachedForeground{nullptr};
+
+// Some joysticks and Controllers can conflict or send incorrect inputs. These will allow disabling of these devices if desired. The default is enabled for both.
+inline bool KJ_Joystick_Enabled = true;
+inline bool KJ_Xbox_Enabled = true;

@@ -6,6 +6,7 @@
 
 #include <windows.h>
 
+#include "src/KJ_Global.h"
 #include "src/KJ_Controls.h"
 #include "src/KJ_Keyboard.h"
 #include "src/KJ_Mouse.h"
@@ -18,3 +19,9 @@ void KJ_Install(HINSTANCE hInstance = nullptr, HWND targetHwnd = nullptr);
 
 // Stops the threads, removes the hooks and clears all mappings.
 void KJ_Uninstall();
+
+bool KJ_Joystick_Get_Enabled();
+void KJ_Joystick_Set_Enabled(bool enable);
+
+bool KJ_Xbox_Get_Enabled();
+void KJ_Xbox_Set_Enabled(bool enable);

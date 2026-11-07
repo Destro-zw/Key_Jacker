@@ -104,3 +104,23 @@ void KJ_Uninstall()
     KJ_Joystick_Uninstall();
     KJ_Controls_Reset();
 }
+
+bool KJ_Joystick_Get_Enabled()
+{
+    return KJ_Joystick_Enabled;
+}
+
+void KJ_Joystick_Set_Enabled(bool enable)
+{
+    KJ_Joystick_Enabled = enable;
+}
+
+bool KJ_Xbox_Get_Enabled()
+{
+    return KJ_Xbox_Enabled;
+}
+
+void KJ_Xbox_Set_Enabled(bool enable)
+{
+    KJ_Xbox_Enabled = enable;
+}
