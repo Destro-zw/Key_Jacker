@@ -274,6 +274,10 @@ static void PollJoystick()
         ClearJoystickStates();
         return;
     }
+    if (!joystickConnected) {
+        KJ_Joystick_Calabrate_Center();
+    }
+
     joystickConnected = true;
     KJ_Joystick_SetRealConnected(true);
 

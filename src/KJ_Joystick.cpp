@@ -9,15 +9,20 @@
 
 // State
 
-static constexpr DWORD CENTER = 32767;
+static std::atomic<DWORD> CENTER{(DWORD)32767};
+
+static inline DWORD Center()
+{
+    return CENTER.load(std::memory_order_relaxed);
+}
 
 static std::mutex lock;
 static std::atomic<bool> installed{false};
 static std::atomic<bool> realConnected{false};
 
 struct VirtualState {
-    DWORD x = CENTER, y = CENTER, z = CENTER;
-    DWORD r = CENTER, u = CENTER, v = CENTER;
+    DWORD x = Center(), y = Center(), z = Center();
+    DWORD r = Center(), u = Center(), v = Center();
     DWORD buttons = 0;
     DWORD pov = JOY_POVCENTERED;
 };
@@ -136,9 +141,9 @@ static void BlockMappedInputs(LPJOYINFO pji)
 {
     if (!pji) return;
 
-    if (AxisMapped(KJ_JOYSTICK_AXIS_X_POS, KJ_JOYSTICK_AXIS_X_NEG)) pji->wXpos = static_cast<WORD>(CENTER);
-    if (AxisMapped(KJ_JOYSTICK_AXIS_Y_POS, KJ_JOYSTICK_AXIS_Y_NEG)) pji->wYpos = static_cast<WORD>(CENTER);
-    if (AxisMapped(KJ_JOYSTICK_AXIS_Z_POS, KJ_JOYSTICK_AXIS_Z_NEG)) pji->wZpos = static_cast<WORD>(CENTER);
+    if (AxisMapped(KJ_JOYSTICK_AXIS_X_POS, KJ_JOYSTICK_AXIS_X_NEG)) pji->wXpos = static_cast<WORD>(Center());
+    if (AxisMapped(KJ_JOYSTICK_AXIS_Y_POS, KJ_JOYSTICK_AXIS_Y_NEG)) pji->wYpos = static_cast<WORD>(Center());
+    if (AxisMapped(KJ_JOYSTICK_AXIS_Z_POS, KJ_JOYSTICK_AXIS_Z_NEG)) pji->wZpos = static_cast<WORD>(Center());
 
     for (int i = 0; i < 16; ++i)
         if (KJ_Controls_IsMapped(KJ_JOYSTICK_BUTTON_1 - i))
@@ -149,10 +154,10 @@ static void BlockMappedInputsEx(LPJOYINFOEX pji)
 {
     if (!pji) return;
 
-    if (AxisMapped(KJ_JOYSTICK_AXIS_X_POS, KJ_JOYSTICK_AXIS_X_NEG)) pji->dwXpos = CENTER;
-    if (AxisMapped(KJ_JOYSTICK_AXIS_Y_POS, KJ_JOYSTICK_AXIS_Y_NEG)) pji->dwYpos = CENTER;
-    if (AxisMapped(KJ_JOYSTICK_AXIS_Z_POS, KJ_JOYSTICK_AXIS_Z_NEG)) pji->dwZpos = CENTER;
-    if (AxisMapped(KJ_JOYSTICK_ROTATION_Z_POS, KJ_JOYSTICK_ROTATION_Z_NEG)) pji->dwRpos = CENTER;
+    if (AxisMapped(KJ_JOYSTICK_AXIS_X_POS, KJ_JOYSTICK_AXIS_X_NEG)) pji->dwXpos = Center();
+    if (AxisMapped(KJ_JOYSTICK_AXIS_Y_POS, KJ_JOYSTICK_AXIS_Y_NEG)) pji->dwYpos = Center();
+    if (AxisMapped(KJ_JOYSTICK_AXIS_Z_POS, KJ_JOYSTICK_AXIS_Z_NEG)) pji->dwZpos = Center();
+    if (AxisMapped(KJ_JOYSTICK_ROTATION_Z_POS, KJ_JOYSTICK_ROTATION_Z_NEG)) pji->dwRpos = Center();
 
     for (int i = 0; i < 16; ++i)
         if (KJ_Controls_IsMapped(KJ_JOYSTICK_BUTTON_1 - i))
@@ -165,21 +170,21 @@ static void BlockMappedInputsEx(LPJOYINFOEX pji)
 static void InjectVirtualState(LPJOYINFO pji)
 {
     std::lock_guard<std::mutex> guard(lock);
-    if (virt.x != CENTER) pji->wXpos = static_cast<WORD>(virt.x & 0xFFFF);
-    if (virt.y != CENTER) pji->wYpos = static_cast<WORD>(virt.y & 0xFFFF);
-    if (virt.z != CENTER) pji->wZpos = static_cast<WORD>(virt.z & 0xFFFF);
+    if (virt.x != Center()) pji->wXpos = static_cast<WORD>(virt.x & 0xFFFF);
+    if (virt.y != Center()) pji->wYpos = static_cast<WORD>(virt.y & 0xFFFF);
+    if (virt.z != Center()) pji->wZpos = static_cast<WORD>(virt.z & 0xFFFF);
     pji->wButtons |= static_cast<WORD>(virt.buttons & 0xFFFF);
 }
 
 static void InjectVirtualStateEx(LPJOYINFOEX pji)
 {
     std::lock_guard<std::mutex> guard(lock);
-    if (virt.x != CENTER) pji->dwXpos = virt.x;
-    if (virt.y != CENTER) pji->dwYpos = virt.y;
-    if (virt.z != CENTER) pji->dwZpos = virt.z;
-    if (virt.r != CENTER) pji->dwRpos = virt.r;
-    if (virt.u != CENTER) pji->dwUpos = virt.u;
-    if (virt.v != CENTER) pji->dwVpos = virt.v;
+    if (virt.x != Center()) pji->dwXpos = virt.x;
+    if (virt.y != Center()) pji->dwYpos = virt.y;
+    if (virt.z != Center()) pji->dwZpos = virt.z;
+    if (virt.r != Center()) pji->dwRpos = virt.r;
+    if (virt.u != Center()) pji->dwUpos = virt.u;
+    if (virt.v != Center()) pji->dwVpos = virt.v;
     pji->dwButtons |= virt.buttons;
     if (virt.pov != JOY_POVCENTERED) pji->dwPOV = virt.pov;
 }
@@ -204,9 +209,9 @@ static MMRESULT WINAPI Hooked_joyGetPos(UINT uJoyID, LPJOYINFO pji)
     if (realConnected.load(std::memory_order_acquire))
         haveReal = real_joyGetPos && (real_joyGetPos(uJoyID, pji) == MMSYSERR_NOERROR);
     if (!haveReal) {
-        pji->wXpos = static_cast<WORD>(CENTER);
-        pji->wYpos = static_cast<WORD>(CENTER);
-        pji->wZpos = static_cast<WORD>(CENTER);
+        pji->wXpos = static_cast<WORD>(Center());
+        pji->wYpos = static_cast<WORD>(Center());
+        pji->wZpos = static_cast<WORD>(Center());
         pji->wButtons = 0;
     }
     BlockMappedInputs(pji);
@@ -223,8 +228,8 @@ static MMRESULT WINAPI Hooked_joyGetPosEx(UINT uJoyID, LPJOYINFOEX pji)
     if (realConnected.load(std::memory_order_acquire))
         haveReal = real_joyGetPosEx && (real_joyGetPosEx(uJoyID, pji) == MMSYSERR_NOERROR);
     if (!haveReal) {
-        pji->dwXpos = CENTER; pji->dwYpos = CENTER; pji->dwZpos = CENTER;
-        pji->dwRpos = CENTER; pji->dwUpos = CENTER; pji->dwVpos = CENTER;
+        pji->dwXpos = Center(); pji->dwYpos = Center(); pji->dwZpos = Center();
+        pji->dwRpos = Center(); pji->dwUpos = Center(); pji->dwVpos = Center();
         pji->dwButtons = 0;
         pji->dwPOV = JOY_POVCENTERED;
     }
@@ -471,4 +476,19 @@ bool KJ_Joystick_GetDeadzone(KJ_JoystickGetType type, int* outRange)
     if (!p || !outRange) return false;
     *outRange = *p;
     return true;
+}
+
+void KJ_Joystick_Calabrate_Center()
+{
+    DWORD mn = 0, mx = 65535, pos = 0;
+    if (!KJ_Joystick_GetAxis(KJ_JoystickGetType::X, nullptr, &mn, &mx, &pos))
+        return;
+
+    DWORD centre = (mn + mx) / 2;
+    CENTER.store(centre, std::memory_order_release);
+}
+
+DWORD KJ_Joystick_Get_Center()
+{
+    return (DWORD) CENTER;
 }

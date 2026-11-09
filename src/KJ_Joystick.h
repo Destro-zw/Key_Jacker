@@ -28,6 +28,9 @@ void KJ_Joystick_Reset();
 
 void KJ_Joystick_SetRealConnected(bool connected);
 
+void KJ_Joystick_Calabrate_Center();
+DWORD KJ_Joystick_Get_Center();
+    
 bool KJ_Joystick_GetAxis(KJ_JoystickGetType type,
                          UINT* outId, DWORD* outMin, DWORD* outMax, DWORD* outPos);
 
